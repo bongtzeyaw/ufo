@@ -68,6 +68,8 @@ browser context:
   also links to its DVIDS page and (when present) the original file on war.gov.
 - Year is parsed permissively from the messy `Incident Date` field; two-digit
   years pivot at 26 (…/49 → 1949, …/26 → 2026).
+- **Visual design system** (theme tokens, the light/dark mechanism, brand
+  assets) is documented in [DESIGN.md](DESIGN.md).
 
 ## Data & licensing
 

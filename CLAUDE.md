@@ -36,6 +36,9 @@ Key facts that took real effort to learn — do not re-derive:
 - Off-world records (Moon/orbit) and no-location records are reachable via
   shelf buttons, never map bubbles. Frontend counts: 130 records = 110
   mappable (27 bubbles) + 9 off-world + 11 no-location.
+- The visual design system (light/dark theme tokens, theming mechanism, brand
+  assets) is documented in DESIGN.md; `site/css/style.css` is canonical for
+  token values.
 
 ## Commands
 

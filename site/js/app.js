@@ -185,8 +185,8 @@
         { className: "loc-tip", direction: "top", offset: [0, -6] }
       );
 
-      marker.on("mouseover", () => showCircle(loc));
-      marker.on("mouseout", () => { pinnedLoc ? showCircle(pinnedLoc) : clearCircle(); });
+      marker.on("mouseover", () => { if (!pinnedLoc) showCircle(loc); });
+      marker.on("mouseout", () => { if (!pinnedLoc) clearCircle(); });
 
       marker.on("click", () => {
         pinnedLoc = loc;

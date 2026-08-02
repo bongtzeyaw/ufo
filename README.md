@@ -25,7 +25,13 @@ entries for locations that currently appear only on excluded record types —
 they cost nothing and prevent build failures if a future video or image lands
 there.
 
-There is no backend — any static host can serve the `site/` folder as-is.
+There is no backend. Deployment is via GitHub Pages: the workflow in
+`.github/workflows/pages.yml` publishes the `site/` folder on every push to
+main (Settings → Pages → Source: GitHub Actions). Any other static host
+works too.
+
+The site is served at https://ufo.bongtzeyaw.com via a CNAME record at the
+registrar pointing to bongtzeyaw.github.io.
 
 ## Run locally
 

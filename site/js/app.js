@@ -1,6 +1,14 @@
 /* PURSUE UAP Video Map — renders site/data/records.json onto a Leaflet map. */
 (async function () {
-  const BUBBLE_COLOR = "#3987e5";
+  // Theme-dependent colors; <html data-theme> is stamped by index.html before paint.
+  const THEME = {
+    dark:  { tiles: "dark_all",  bubble: "#4a94ef", ring: "#0f1115" },
+    light: { tiles: "light_all", bubble: "#2f6fd0", ring: "#ffffff" },
+  };
+  const currentTheme = () =>
+    document.documentElement.dataset.theme === "light" ? "light" : "dark";
+  const tileURL = (name) =>
+    `https://{s}.basemaps.cartocdn.com/${THEME[name].tiles}/{z}/{x}/{y}{r}.png`;
 
   const data = await fetch("data/records.json", { cache: "no-store" }).then((r) => r.json());
   const { locations, records } = data;
@@ -11,7 +19,7 @@
     maxBounds: [[-90, -180], [90, 180]],
     maxBoundsViscosity: 1.0,
   }).setView([28, 15], 2);
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+  const tiles = L.tileLayer(tileURL(currentTheme()), {
     attribution:
       '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
     subdomains: "abcd",
@@ -41,7 +49,7 @@
     clearCircle();
     precisionCircle = L.circle([loc.lat, loc.lng], {
       radius: loc.radius_km * 1000,
-      color: BUBBLE_COLOR,
+      color: THEME[currentTheme()].bubble,
       weight: 1.5,
       dashArray: "6 6",
       fill: false,
@@ -174,9 +182,9 @@
       const loc = locations[locKey];
       const marker = L.circleMarker([loc.lat, loc.lng], {
         radius: 6 + 3.2 * Math.sqrt(recs.length),
-        color: "#1a1a19",
+        color: THEME[currentTheme()].ring,
         weight: 2,
-        fillColor: BUBBLE_COLOR,
+        fillColor: THEME[currentTheme()].bubble,
         fillOpacity: 0.85,
       }).addTo(bubbleLayer);
 
@@ -204,7 +212,8 @@
     const un = records.filter((r) => matches(r) && r.location == null);
     $("offworld-count").textContent = off.length;
     $("unmapped-count").textContent = un.length;
-    $("count-pill").textContent = `${shown} of ${records.length} records`;
+    $("rail-count").innerHTML =
+      `<b>${shown}</b> records · <b>${shown - off.length - un.length}</b> mapped<br><b>${byLoc.size}</b> locations shown`;
 
     $("offworld-btn").onclick = () =>
       openPanel("Off-world records", `${off.length} records observed beyond Earth's surface`,
@@ -213,6 +222,27 @@
       openPanel("Records without a usable location", `${un.length} records with no location stated`,
         un.sort((a, b) => (b.year || 0) - (a.year || 0)));
   }
+
+  // ---------- theme toggle ----------
+  const themeBtn = $("theme-toggle");
+
+  function syncThemeBtn() {
+    const dark = currentTheme() === "dark";
+    themeBtn.textContent = dark ? "☀" : "☾";
+    themeBtn.setAttribute("aria-label", dark ? "Switch to light theme" : "Switch to dark theme");
+  }
+
+  themeBtn.addEventListener("click", () => {
+    const next = currentTheme() === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem("theme", next); } catch (e) {}
+    const T = THEME[next];
+    tiles.setUrl(tileURL(next));
+    bubbleLayer.eachLayer((m) => m.setStyle({ color: T.ring, fillColor: T.bubble }));
+    if (precisionCircle) precisionCircle.setStyle({ color: T.bubble });
+    syncThemeBtn();
+  });
+  syncThemeBtn();
 
   render();
 })();

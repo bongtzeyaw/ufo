@@ -31,7 +31,27 @@
   fitMinZoom();
 
   const bubbleLayer = L.layerGroup().addTo(map);
+
+  // Dashed precision circle: shown while hovering a bubble, and pinned
+  // while that bubble's panel is open (so touch devices get it on tap).
   let precisionCircle = null;
+  let pinnedLoc = null;
+
+  function showCircle(loc) {
+    clearCircle();
+    precisionCircle = L.circle([loc.lat, loc.lng], {
+      radius: loc.radius_km * 1000,
+      color: BUBBLE_COLOR,
+      weight: 1.5,
+      dashArray: "6 6",
+      fill: false,
+      interactive: false,
+    }).addTo(map);
+  }
+
+  function clearCircle() {
+    if (precisionCircle) { map.removeLayer(precisionCircle); precisionCircle = null; }
+  }
 
   // ---------- filter state ----------
   const state = { agency: "", release: "", yearMin: null, yearMax: null, undated: true };
@@ -80,7 +100,8 @@
 
   function closePanel() {
     panel.hidden = true;
-    if (precisionCircle) { map.removeLayer(precisionCircle); precisionCircle = null; }
+    pinnedLoc = null;
+    clearCircle();
   }
 
   function escapeHTML(s) {
@@ -136,7 +157,8 @@
   // ---------- bubbles ----------
   function render() {
     bubbleLayer.clearLayers();
-    if (precisionCircle) { map.removeLayer(precisionCircle); precisionCircle = null; }
+    pinnedLoc = null;
+    clearCircle();
 
     const byLoc = new Map();
     let shown = 0;
@@ -163,16 +185,12 @@
         { className: "loc-tip", direction: "top", offset: [0, -6] }
       );
 
+      marker.on("mouseover", () => showCircle(loc));
+      marker.on("mouseout", () => { pinnedLoc ? showCircle(pinnedLoc) : clearCircle(); });
+
       marker.on("click", () => {
-        if (precisionCircle) map.removeLayer(precisionCircle);
-        precisionCircle = L.circle([loc.lat, loc.lng], {
-          radius: loc.radius_km * 1000,
-          color: BUBBLE_COLOR,
-          weight: 1.5,
-          dashArray: "6 6",
-          fill: false,
-          interactive: false,
-        }).addTo(map);
+        pinnedLoc = loc;
+        showCircle(loc);
         openPanel(
           loc.label,
           `${recs.length} record${recs.length > 1 ? "s" : ""} · location precision: ±${loc.radius_km} km`,

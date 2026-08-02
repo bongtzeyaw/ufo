@@ -161,6 +161,10 @@ select {
   border-bottom-color: var(--border);
 }
 .leaflet-bar a:hover { background: var(--surface-2); }
+.leaflet-bar a.leaflet-disabled {
+  background: var(--surface);
+  color: var(--border);
+}
 .leaflet-container .leaflet-control-attribution {
   background: var(--credit-bg);
   color: var(--muted);

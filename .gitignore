@@ -1,6 +1,7 @@
 # Claude Code / Playwright debugging artifacts
 .playwright-mcp/
 .claude/
+CLAUDE.md
 
 # macOS
 .DS_Store

@@ -1,6 +1,6 @@
 /* PURSUE UAP Video Map — renders site/data/records.json onto a Leaflet map. */
 (async function () {
-  const KIND_COLOR = { point: "#3987e5", region: "#199e70", aor: "#9085e9" };
+  const BUBBLE_COLOR = "#3987e5";
 
   const data = await fetch("data/records.json", { cache: "no-store" }).then((r) => r.json());
   const { locations, records } = data;
@@ -31,7 +31,27 @@
   fitMinZoom();
 
   const bubbleLayer = L.layerGroup().addTo(map);
+
+  // Dashed precision circle: shown while hovering a bubble, and pinned
+  // while that bubble's panel is open (so touch devices get it on tap).
   let precisionCircle = null;
+  let pinnedLoc = null;
+
+  function showCircle(loc) {
+    clearCircle();
+    precisionCircle = L.circle([loc.lat, loc.lng], {
+      radius: loc.radius_km * 1000,
+      color: BUBBLE_COLOR,
+      weight: 1.5,
+      dashArray: "6 6",
+      fill: false,
+      interactive: false,
+    }).addTo(map);
+  }
+
+  function clearCircle() {
+    if (precisionCircle) { map.removeLayer(precisionCircle); precisionCircle = null; }
+  }
 
   // ---------- filter state ----------
   const state = { agency: "", release: "", yearMin: null, yearMax: null, undated: true };
@@ -80,7 +100,8 @@
 
   function closePanel() {
     panel.hidden = true;
-    if (precisionCircle) { map.removeLayer(precisionCircle); precisionCircle = null; }
+    pinnedLoc = null;
+    clearCircle();
   }
 
   function escapeHTML(s) {
@@ -136,7 +157,8 @@
   // ---------- bubbles ----------
   function render() {
     bubbleLayer.clearLayers();
-    if (precisionCircle) { map.removeLayer(precisionCircle); precisionCircle = null; }
+    pinnedLoc = null;
+    clearCircle();
 
     const byLoc = new Map();
     let shown = 0;
@@ -150,12 +172,11 @@
 
     for (const [locKey, recs] of byLoc) {
       const loc = locations[locKey];
-      const color = KIND_COLOR[loc.kind];
       const marker = L.circleMarker([loc.lat, loc.lng], {
         radius: 6 + 3.2 * Math.sqrt(recs.length),
         color: "#1a1a19",
         weight: 2,
-        fillColor: color,
+        fillColor: BUBBLE_COLOR,
         fillOpacity: 0.85,
       }).addTo(bubbleLayer);
 
@@ -164,20 +185,15 @@
         { className: "loc-tip", direction: "top", offset: [0, -6] }
       );
 
+      marker.on("mouseover", () => { if (!pinnedLoc) showCircle(loc); });
+      marker.on("mouseout", () => { if (!pinnedLoc) clearCircle(); });
+
       marker.on("click", () => {
-        if (precisionCircle) map.removeLayer(precisionCircle);
-        precisionCircle = L.circle([loc.lat, loc.lng], {
-          radius: loc.radius_km * 1000,
-          color: color,
-          weight: 1.5,
-          dashArray: "6 6",
-          fill: false,
-          interactive: false,
-        }).addTo(map);
-        const kindLabel = { point: "city / site", region: "region / country / sea", aor: "military command AOR" }[loc.kind];
+        pinnedLoc = loc;
+        showCircle(loc);
         openPanel(
           loc.label,
-          `${recs.length} record${recs.length > 1 ? "s" : ""} · precision: ${kindLabel} (±${loc.radius_km} km)`,
+          `${recs.length} record${recs.length > 1 ? "s" : ""} · location precision: ±${loc.radius_km} km`,
           recs.sort((a, b) => (b.year || 0) - (a.year || 0))
         );
       });

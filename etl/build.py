@@ -50,9 +50,10 @@ def main() -> int:
             missing.add(loc_raw)
             continue
 
+        kind = entry.get("kind", "place")
         loc_key = entry.get("label") or loc_raw or "Unknown"
-        if entry["kind"] not in ("unmappable",) and loc_key not in locations:
-            locations[loc_key] = {k: entry[k] for k in ("kind", "lat", "lng", "radius_km", "label") if k in entry}
+        if kind != "unmappable" and loc_key not in locations:
+            locations[loc_key] = {k: entry[k] for k in ("lat", "lng", "radius_km", "label") if k in entry}
 
         records.append({
             "id": i,
@@ -63,8 +64,8 @@ def main() -> int:
             "date_raw": r["Incident Date"].strip(),
             "year": parse_year(r["Incident Date"]),
             "location_raw": loc_raw,
-            "location": loc_key if entry["kind"] != "unmappable" else None,
-            "loc_kind": entry["kind"],
+            "location": loc_key if kind != "unmappable" else None,
+            "loc_kind": kind,
             "blurb": r["Description Blurb"].strip(),
             "dvids_id": r["DVIDS Video ID"].strip() or None,
             "img_link": r["PDF | Image Link"].strip() or None,
@@ -83,7 +84,7 @@ def main() -> int:
         encoding="utf-8",
     )
 
-    n_map = sum(1 for r in records if r["loc_kind"] in ("point", "region", "aor"))
+    n_map = sum(1 for r in records if r["loc_kind"] == "place")
     n_off = sum(1 for r in records if r["loc_kind"] == "offworld")
     n_vid = sum(1 for r in records if r["type"] == "VID")
     print(f"{len(records)} records ({n_vid} videos, {len(records) - n_vid} images) -> {OUT_PATH.relative_to(ROOT)}")

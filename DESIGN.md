@@ -130,5 +130,8 @@ The map is the product; chrome stays quiet, one accent family, no decoration.
   same paint as the tokens — no JS, no wrong-logo flash.
 - Brand blues for external work (logo, social images): dark theme
   `#4a94ef → #2456a8`; light theme `#2f6fd0 → #1c4a94` (gradient 135°).
-- Favicon is still the 🛸 emoji SVG in `index.html` — candidate for
-  replacement with the pin mark (Project Discoverability).
+- Favicon: the dark-theme logo (`site/assets/logo-dark.png`), chosen because
+  the browser tab bar follows the *browser* theme, not the site toggle — the
+  near-black chip reads on both light and dark tab bars, while a white chip
+  would glare on dark ones. A theme-adaptive favicon would require an SVG
+  mark with an embedded media query (Firefox-only today).

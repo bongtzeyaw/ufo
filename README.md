@@ -75,3 +75,8 @@ Records and media are works of the U.S. Government (17 U.S.C. § 105, public
 domain), published for public release via PURSUE and DVIDS. Map tiles:
 © OpenStreetMap contributors, © CARTO. This project is not affiliated with or
 endorsed by the U.S. Government.
+
+## Roadmap
+
+Early-stage ideas for future directions ("strawmaps") live in
+[ROADMAP.md](ROADMAP.md).

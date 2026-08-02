@@ -1,4 +1,4 @@
-/* PURSUE UAP Map — renders site/data/records.json onto a Leaflet map. */
+/* PURSUE UAP Video Map — renders site/data/records.json onto a Leaflet map. */
 (async function () {
   const KIND_COLOR = { point: "#3987e5", region: "#199e70", aor: "#9085e9" };
 
@@ -73,8 +73,64 @@
   $("year-max").addEventListener("change", (e) => { state.yearMax = +e.target.value; render(); });
   $("undated").addEventListener("change", (e) => { state.undated = e.target.checked; render(); });
 
+  // ---------- side panel ----------
+  const panel = $("panel");
+  $("panel-close").addEventListener("click", closePanel);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closePanel(); });
+
+  function closePanel() {
+    panel.hidden = true;
+    if (precisionCircle) { map.removeLayer(precisionCircle); precisionCircle = null; }
+  }
+
   function escapeHTML(s) {
     return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  function recDetailHTML(rec) {
+    let media = "";
+    const links = [];
+    if (rec.type === "VID" && rec.dvids_id) {
+      media = `<div class="embed-box"><iframe loading="lazy" src="https://www.dvidshub.net/video/embed/${rec.dvids_id}" allowfullscreen title="DVIDS video player"></iframe></div>`;
+      links.push(`<a href="https://www.dvidshub.net/video/${rec.dvids_id}" target="_blank" rel="noopener">View on DVIDS ↗</a>`);
+    } else if (rec.type === "IMG" && (rec.thumb || rec.img_link)) {
+      media = `<img class="rec-photo" loading="lazy" src="${rec.thumb || rec.img_link}" alt="${escapeHTML(rec.title)}">`;
+      if (rec.img_link) links.push(`<a href="${rec.img_link}" target="_blank" rel="noopener">Full-size image ↗</a>`);
+    }
+    links.push(`<a href="https://www.war.gov/UFO/" target="_blank" rel="noopener">PURSUE record ↗</a>`);
+    return `${media}<div class="blurb">${escapeHTML(rec.blurb || "No description provided.")}</div><div class="rec-links">${links.join("")}</div>`;
+  }
+
+  function openPanel(title, sub, recs) {
+    $("panel-title").textContent = title;
+    $("panel-sub").textContent = sub;
+    const body = $("panel-body");
+    body.innerHTML = "";
+    for (const rec of recs) {
+      const div = document.createElement("div");
+      div.className = "rec";
+      div.innerHTML = `
+        <div class="rec-head">
+          <span class="badge ${rec.type}">${rec.type === "VID" ? "VIDEO" : "IMAGE"}</span>
+          <span class="rec-title">${escapeHTML(rec.title)}</span>
+        </div>
+        <div class="rec-meta">${rec.agency} · ${rec.date_raw || "date unknown"} · released ${rec.release}${rec.location_raw ? " · “" + escapeHTML(rec.location_raw) + "”" : ""}</div>
+        <div class="rec-detail"></div>`;
+      div.addEventListener("click", (e) => {
+        if (e.target.closest("a, iframe, .rec-detail")) return;
+        const wasOpen = div.classList.contains("open");
+        body.querySelectorAll(".rec.open").forEach((el) => {
+          el.classList.remove("open");
+          el.querySelector(".rec-detail").innerHTML = ""; // unload iframe
+        });
+        if (!wasOpen) {
+          div.classList.add("open");
+          div.querySelector(".rec-detail").innerHTML = recDetailHTML(rec);
+        }
+      });
+      body.appendChild(div);
+    }
+    panel.hidden = false;
   }
 
   // ---------- bubbles ----------
@@ -118,6 +174,12 @@
           fill: false,
           interactive: false,
         }).addTo(map);
+        const kindLabel = { point: "city / site", region: "region / country / sea", aor: "military command AOR" }[loc.kind];
+        openPanel(
+          loc.label,
+          `${recs.length} record${recs.length > 1 ? "s" : ""} · precision: ${kindLabel} (±${loc.radius_km} km)`,
+          recs.sort((a, b) => (b.year || 0) - (a.year || 0))
+        );
       });
     }
 
@@ -127,6 +189,13 @@
     $("offworld-count").textContent = off.length;
     $("unmapped-count").textContent = un.length;
     $("count-pill").textContent = `${shown} of ${records.length} records`;
+
+    $("offworld-btn").onclick = () =>
+      openPanel("Off-world records", `${off.length} records observed beyond Earth's surface`,
+        off.sort((a, b) => (b.year || 0) - (a.year || 0)));
+    $("unmapped-btn").onclick = () =>
+      openPanel("Records without a usable location", `${un.length} records with no location stated`,
+        un.sort((a, b) => (b.year || 0) - (a.year || 0)));
   }
 
   render();

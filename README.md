@@ -59,9 +59,8 @@ browser context:
 
 - **Location precision is displayed, not hidden.** Official locations are
   coarse text ("Western United States", "CENTCOM"). Each gazetteer entry
-  carries a `radius_km`; the map shows it as a dashed circle on selection and
-  bubbles are colored by precision class (city/site, region/sea/country,
-  military command AOR).
+  carries a `radius_km`; clicking a bubble draws it as a dashed circle, so
+  approximate locations are never presented as exact points.
 - **Off-world records** (Moon, Low-Earth Orbit images) and **records with no
   usable location** (blank or N/A) are reachable from the shelf buttons at
   bottom-right, so the map never silently drops records.

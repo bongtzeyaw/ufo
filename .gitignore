@@ -1,7 +1,9 @@
 # Claude Code / Playwright debugging artifacts
 .playwright-mcp/
 .claude/
-CLAUDE.md
+
+# Personal Claude preferences stay local; the shared CLAUDE.md is committed
+CLAUDE.local.md
 
 # macOS
 .DS_Store

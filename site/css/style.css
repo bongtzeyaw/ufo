@@ -120,10 +120,9 @@ select:focus-visible, .shelf-btn:focus-visible, .theme-toggle:focus-visible, .pa
   font-weight: 600;
 }
 .rail select { width: 100%; }
-.year-row { display: flex; gap: 8px; }
-.year-row .year-filter { flex: 1; min-width: 0; }
-.year-filter { color: var(--muted); font-size: 12px; display: flex; gap: 4px; align-items: center; }
-.year-filter select { flex: 1; min-width: 0; }
+.year-row { display: flex; gap: 6px; align-items: center; }
+.year-row select { flex: 1; min-width: 66px; }
+.year-dash { color: var(--muted); flex: none; }
 .undated-toggle { color: var(--muted); font-size: 12px; display: flex; gap: 5px; align-items: center; cursor: pointer; padding-top: 2px; }
 .rail-foot {
   margin-top: auto;

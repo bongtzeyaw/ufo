@@ -2,11 +2,15 @@
 """Build site/data/records.json from data/uap-data.csv + etl/gazetteer.json.
 
 Only video (VID) and image (IMG) records are kept — audio and PDFs are
-deliberately excluded from this site.
+deliberately excluded from this site. Synthetic content ("Digital Rendering" /
+"Digital Recreation" artistic interpretations, not real footage) is excluded by
+title pattern.
 
 Usage: python3 etl/build.py
-Exits non-zero if any location string is missing from the gazetteer, so
-schema/vocabulary drift in a new PURSUE release fails loudly.
+Exits non-zero if any location string is missing from the gazetteer, or if a
+kept record's title/blurb contains synthetic-content vocabulary that the title
+filter did not catch, so schema/vocabulary drift in a new PURSUE release fails
+loudly.
 """
 import csv
 import json
@@ -18,6 +22,16 @@ ROOT = Path(__file__).resolve().parent.parent
 CSV_PATH = ROOT / "data" / "uap-data.csv"
 GAZETTEER_PATH = ROOT / "etl" / "gazetteer.json"
 OUT_PATH = ROOT / "site" / "data" / "records.json"
+
+# Titles contain non-breaking spaces; \s matches them.
+EXCLUDE_TITLE = re.compile(r"digital\s+(rendering|recreation|creation)", re.IGNORECASE)
+# Tripwire: phrases (not bare words like "rendering", which genuine footage
+# blurbs use in other senses) that suggest a synthetic record slipped past
+# EXCLUDE_TITLE.
+SUSPECT = re.compile(
+    r"artistic\s+interpretation|artist'?s\s+impression|digital\s+(rendering|recreation|creation)",
+    re.IGNORECASE,
+)
 
 
 def parse_year(raw: str) -> int | None:
@@ -41,9 +55,14 @@ def main() -> int:
     with CSV_PATH.open(encoding="utf-8-sig", newline="") as f:
         rows = [r for r in csv.DictReader(f) if r["Type"].strip().upper() in ("VID", "IMG")]
 
+    n_synthetic = sum(1 for r in rows if EXCLUDE_TITLE.search(r["Title"]))
+    rows = [r for r in rows if not EXCLUDE_TITLE.search(r["Title"])]
+
     records, locations = [], {}
-    missing = set()
+    missing, suspect = set(), []
     for i, r in enumerate(rows):
+        if SUSPECT.search(r["Title"]) or SUSPECT.search(r["Description Blurb"]):
+            suspect.append(r["Title"].strip())
         loc_raw = r["Incident Location"].strip()
         entry = gazetteer.get(loc_raw)
         if entry is None:
@@ -75,6 +94,9 @@ def main() -> int:
     if missing:
         print("FATAL: locations missing from gazetteer:", sorted(missing), file=sys.stderr)
         return 1
+    if suspect:
+        print("FATAL: possible synthetic-content records not excluded:", suspect, file=sys.stderr)
+        return 1
 
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     OUT_PATH.write_text(
@@ -88,6 +110,7 @@ def main() -> int:
     n_off = sum(1 for r in records if r["loc_kind"] == "offworld")
     n_vid = sum(1 for r in records if r["type"] == "VID")
     print(f"{len(records)} records ({n_vid} videos, {len(records) - n_vid} images) -> {OUT_PATH.relative_to(ROOT)}")
+    print(f"  excluded {n_synthetic} synthetic (digital rendering/recreation)")
     print(f"  mappable: {n_map}  off-world: {n_off}  without location: {len(records) - n_map - n_off}")
     print(f"  distinct map locations: {len(locations)}")
     return 0

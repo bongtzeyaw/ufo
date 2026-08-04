@@ -118,15 +118,12 @@
 
   function recDetailHTML(rec) {
     let media = "";
-    const links = [];
     if (rec.type === "VID" && rec.dvids_id) {
       media = `<div class="embed-box"><iframe loading="lazy" src="https://www.dvidshub.net/video/embed/${rec.dvids_id}" allowfullscreen title="DVIDS video player"></iframe></div>`;
     } else if (rec.type === "IMG" && (rec.thumb || rec.img_link)) {
       media = `<img class="rec-photo" loading="lazy" src="${rec.thumb || rec.img_link}" alt="${escapeHTML(rec.title)}">`;
-      if (rec.img_link) links.push(`<a href="${rec.img_link}" target="_blank" rel="noopener">Full-size image ↗</a>`);
     }
-    const linksHTML = links.length ? `<div class="rec-links">${links.join("")}</div>` : "";
-    return `${media}<div class="blurb">${escapeHTML(rec.blurb || "No description provided.")}</div>${linksHTML}`;
+    return `${media}<div class="blurb">${escapeHTML(rec.blurb || "No description provided.")}</div>`;
   }
 
   function openPanel(title, sub, recs) {

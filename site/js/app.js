@@ -119,7 +119,7 @@
   function recDetailHTML(rec) {
     let media = "";
     if (rec.type === "VID" && rec.dvids_id) {
-      media = `<div class="embed-box"><iframe loading="lazy" src="https://www.dvidshub.net/video/embed/${rec.dvids_id}" allowfullscreen title="DVIDS video player"></iframe></div>`;
+      media = `<div class="embed-box"><iframe loading="lazy" scrolling="no" src="https://www.dvidshub.net/video/embed/${rec.dvids_id}" allowfullscreen title="DVIDS video player"></iframe></div>`;
     } else if (rec.type === "IMG" && (rec.thumb || rec.img_link)) {
       media = `<img class="rec-photo" loading="lazy" src="${rec.thumb || rec.img_link}" alt="${escapeHTML(rec.title)}">`;
     }

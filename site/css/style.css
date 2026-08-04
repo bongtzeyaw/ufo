@@ -279,7 +279,6 @@ select {
 }
 .embed-box { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 6px; overflow: hidden; }
 .embed-box iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-.rec-links { margin-top: 8px; font-size: 12px; display: flex; gap: 14px; flex-wrap: wrap; }
 .rec-photo { display: block; max-width: 100%; border-radius: 6px; }
 
 /* ---- footer ---- */
